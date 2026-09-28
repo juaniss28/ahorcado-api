@@ -4,6 +4,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
@@ -15,13 +17,17 @@ public class Palabra {
     private Long id;
 
     private String palabra;
-    private String categoria;
+
+    @ManyToOne
+    @JoinColumn(name = "categoria_id")
+    private Categoria categoria;
+
     private String dificultad;
 
     protected Palabra() {
     }
 
-    public Palabra(String palabra, String categoria, String dificultad) {
+    public Palabra(String palabra, Categoria categoria, String dificultad) {
         this.palabra = palabra;
         this.categoria = categoria;
         this.dificultad = dificultad;
@@ -35,7 +41,7 @@ public class Palabra {
         return palabra;
     }
 
-    public String getCategoria() {
+    public Categoria getCategoria() {
         return categoria;
     }
 
@@ -47,11 +53,11 @@ public class Palabra {
         this.palabra = palabra;
     }
 
-    public void setCategoria(String categoria) {
+    public void setCategoria(Categoria categoria) {
         this.categoria = categoria;
     }
 
-    public void setDificultad(String dificultad) {
+        public void setDificultad(String dificultad) {
         this.dificultad = dificultad;
     }
 }

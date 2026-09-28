@@ -9,6 +9,6 @@ import java.util.List;
 
 public interface PalabraRepository extends JpaRepository<Palabra, Long> {
 
-    @Query("SELECT p FROM Palabra p WHERE LOWER(p.categoria) = LOWER(:categoria)")
+@Query("SELECT p FROM Palabra p WHERE LOWER(p.categoria.nombre) = LOWER(:categoria)")
     List<Palabra> buscarPorCategoria(@Param("categoria") String categoria);
 }

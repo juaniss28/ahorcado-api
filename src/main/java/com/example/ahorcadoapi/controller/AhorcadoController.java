@@ -1,11 +1,14 @@
 package com.example.ahorcadoapi.controller;
 
 import com.example.ahorcadoapi.dto.PalabraDTO;
+import com.example.ahorcadoapi.model.Categoria;
 import com.example.ahorcadoapi.model.Palabra;
+import com.example.ahorcadoapi.repository.CategoriaRepository;
 import com.example.ahorcadoapi.repository.PalabraRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.example.ahorcadoapi.observability.AhorcadoMetrics;
 
 import java.util.List;
 
@@ -14,10 +17,19 @@ import java.util.List;
 public class AhorcadoController {
 
     private final PalabraRepository repository;
+    private final CategoriaRepository categoriaRepository;
+    private final AhorcadoMetrics ahorcadoMetrics;
 
-    public AhorcadoController(PalabraRepository repository) {
-        this.repository = repository;
-    }
+
+    public AhorcadoController(
+        PalabraRepository repository,
+        CategoriaRepository categoriaRepository,
+        AhorcadoMetrics ahorcadoMetrics) {
+
+    this.repository = repository;
+    this.categoriaRepository = categoriaRepository;
+    this.ahorcadoMetrics = ahorcadoMetrics;
+}
 
     // GET: obtener todas las palabras
     @GetMapping
@@ -27,7 +39,8 @@ public class AhorcadoController {
 
     // GET + PathVariable: obtener una palabra por ID
     @GetMapping("/{id}")
-    public ResponseEntity<Palabra> obtenerPalabraPorId(@PathVariable Long id) {
+    public ResponseEntity<Palabra> obtenerPalabraPorId(
+            @PathVariable Long id) {
 
         return repository.findById(id)
                 .map(ResponseEntity::ok)
@@ -44,19 +57,29 @@ public class AhorcadoController {
         );
     }
 
-    // POST + RequestBody + DTO
+    // POST: crear una palabra
     @PostMapping
-    public ResponseEntity<Palabra> crearPalabra(
+    public ResponseEntity<?> crearPalabra(
             @RequestBody PalabraDTO datos) {
+
+        Categoria categoria = categoriaRepository
+                .findById(datos.categoriaId())
+                .orElse(null);
+
+        if (categoria == null) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body("La categoría no existe");
+        }
 
         Palabra nuevaPalabra = new Palabra(
                 datos.palabra(),
-                datos.categoria(),
+                categoria,
                 datos.dificultad()
         );
 
         Palabra palabraGuardada = repository.save(nuevaPalabra);
-
+        ahorcadoMetrics.incrementarPalabrasCreadas();
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(palabraGuardada);
@@ -64,27 +87,39 @@ public class AhorcadoController {
 
     // PUT: actualizar una palabra
     @PutMapping("/{id}")
-    public ResponseEntity<Palabra> actualizarPalabra(
+    public ResponseEntity<?> actualizarPalabra(
             @PathVariable Long id,
             @RequestBody PalabraDTO datos) {
 
-        return repository.findById(id)
-                .map(palabra -> {
+        Palabra palabra = repository.findById(id).orElse(null);
 
-                    palabra.setPalabra(datos.palabra());
-                    palabra.setCategoria(datos.categoria());
-                    palabra.setDificultad(datos.dificultad());
+        if (palabra == null) {
+            return ResponseEntity.notFound().build();
+        }
 
-                    Palabra actualizada = repository.save(palabra);
+        Categoria categoria = categoriaRepository
+                .findById(datos.categoriaId())
+                .orElse(null);
 
-                    return ResponseEntity.ok(actualizada);
-                })
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        if (categoria == null) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body("La categoría no existe");
+        }
+
+        palabra.setPalabra(datos.palabra());
+        palabra.setCategoria(categoria);
+        palabra.setDificultad(datos.dificultad());
+
+        Palabra actualizada = repository.save(palabra);
+
+        return ResponseEntity.ok(actualizada);
     }
 
     // DELETE: eliminar una palabra
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminarPalabra(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminarPalabra(
+            @PathVariable Long id) {
 
         if (!repository.existsById(id)) {
             return ResponseEntity.notFound().build();

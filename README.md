@@ -1,51 +1,56 @@
 # API REST - Juego del Ahorcado
 
-API REST básica desarrollada con Java 17 y Spring Boot para gestionar palabras de un juego de Ahorcado.
+API REST desarrollada con Java 17 y Spring Boot para gestionar palabras de un juego de Ahorcado.
+
+El proyecto permite almacenar palabras y categorías en MySQL, consultar y modificar información mediante endpoints REST, consumir una API externa y utilizar herramientas de observabilidad para monitorear el funcionamiento de la aplicación.
+
+## Integrantes
+
+- Juanita Oliveros
 
 ## Descripción
 
-El proyecto permite consultar palabras, buscar palabras por categoría y registrar nuevas palabras mediante diferentes endpoints REST.
+La aplicación permite gestionar palabras del juego del Ahorcado.
+
+Las palabras están relacionadas con categorías mediante una relación `ManyToOne`. La información se almacena de forma persistente en una base de datos MySQL utilizando Spring Data JPA e Hibernate.
+
+Además, la aplicación consume la API pública PokeAPI como servicio externo y maneja los errores que pueden presentarse durante la comunicación.
+
+El proyecto también incorpora herramientas de observabilidad mediante Spring Boot Actuator, Micrometer y Prometheus.
 
 ## Tecnologías
 
 - Java 17
-- Spring Boot
+- Spring Boot 4.1.1
 - Maven
+- Spring Data JPA
+- Hibernate
+- MySQL 8
+- REST API
 - JSON
-- API REST
+- RestClient
+- Spring Boot Actuator
+- Micrometer
+- Prometheus
+- Git y GitHub
 
-## Endpoints
+## Estructura principal
 
-### Obtener todas las palabras
+El proyecto está organizado principalmente en:
 
-GET /ahorcado
+- `controller`: contiene los controladores REST.
+- `model`: contiene las entidades `Palabra` y `Categoria`.
+- `repository`: contiene los repositorios JPA.
+- `dto`: contiene los objetos de transferencia de datos.
+- `service`: contiene la lógica para consumir la API externa.
+- `observability`: contiene la métrica personalizada.
+- `health`: contiene el indicador de salud personalizado.
 
-### Obtener una palabra por ID
+## Persistencia con MySQL
 
-GET /ahorcado/{id}
+La aplicación utiliza MySQL como base de datos.
 
-### Buscar por categoría
+Base de datos utilizada:
 
-GET /ahorcado/buscar?categoria=animales
-
-### Crear una nueva palabra
-
-POST /ahorcado
-
-Ejemplo de JSON:
-
-{
-  "palabra": "dragon",
-  "categoria": "animales",
-  "dificultad": "media"
-}
-
-## Ejecución
-
-Para ejecutar la aplicación:
-
-./mvnw spring-boot:run
-
-La API estará disponible en:
-
-http://localhost:8080
+```text
+ahorcado_db
